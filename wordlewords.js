@@ -17,6 +17,7 @@ let streakText = "Win Streak ";
 let avgText = "Average Number of Guesses per game ";
 let currGuessText = "Current Number of Guesses "
 
+
 //init dom variables
 let gamesPlayedElmnt;
 let wonElmnt;
@@ -85,8 +86,12 @@ function initPage(){
         printPriorGuesses();
         guessInput.removeAttribute("disabled");
         guessSubmit.removeAttribute("disabled");
+        if(localStorage.getItem("numChar")){
+            renderLi("guess-results", "Number of Characters in the word: ",localStorage.getItem("numChar"));
+            renderLi("guess-results", "Number of Characters in the correct location: ", localStorage.getItem("sameLoc"));
+            renderLi("guess-results", localStorage.getItem("lenResult"));
+        }
     }
-
 
 }
 
@@ -101,7 +106,7 @@ function printPriorGuesses(){
 }
 
 function calcAvg(){
-    avgGuesses = (numGuesses + (gamesPlayed * avgGuesses))/(gamesPlayed + 1);
+    avgGuesses = parseInt((numGuesses + (gamesPlayed * avgGuesses))/(gamesPlayed + 1));
     localStorage.setItem("avgGuesses", avgGuesses);
     avgElmnt.textContent = avgText + avgGuesses;
 }
@@ -110,8 +115,11 @@ function calcAvg(){
 //clear text box
 //clear prior guesses 
 function newGameHandler(newWord){
-    calcAvg();
+    clearResultDeets();
+    document.getElementById("guess-results").innerHTML = "";
+    guessList.innerHTML = "";
     if(GAMEINPROGRESS){  
+        calcAvg();
         //update variables
         gamesPlayed++;
         winStreak = 0;
@@ -142,6 +150,7 @@ function guessHandler(){
         alert("No special characters or numbers");
         return;
     }
+    document.getElementById("guess-results").innerHTML = "";
     numGuesses++;
     localStorage.setItem("numGuesses", numGuesses);
     currGuess.textContent = currGuessText + numGuesses;
@@ -164,16 +173,77 @@ function guessHandler(){
 
 }
 
+function renderLi(elementName, ...data){
+    let  elmnt = document.getElementById(elementName);
+    let li = document.createElement("li");
+    li.innerText = "";
+    data.forEach((datum) => {
+        li.innerText = li.innerText + datum
+    })
+    elmnt.appendChild(li);
+}
+
+function clearResultDeets(){
+    localStorage.removeItem("numChar");
+    localStorage.removeItem("lenResult");
+    localStorage.removeItem("sameLoc");
+}
+
 
 function checkAnswer(guess){
     if(guess === GUESSANSWER){
         gamesWon++;
         localStorage.setItem("gamesWon", gamesWon);
         wonElmnt.textContent = wonText + gamesWon;
+        calcAvg();
         gamesPlayed++;
         localStorage.setItem("gamesPlayer", gamesPlayed);
         resetGame();
-        calcAvg();
+        winStreak++;
+        localStorage.setItem("winStreak", winStreak);
+        return;
+    }else{
+        let ansLen = GUESSANSWER.length;
+        let guessLen = guess.length;
+        let guessFreq = new Array(26).fill(0);
+        let ansFreq = new Array(26).fill(0);
+        let commonCharCount = 0;
+        let sameLocCount = 0;
+        for(let i = 0; i < guessLen; i++){
+            guessFreq[guess[i].charCodeAt() - 97]++;
+        }
+        for(let i = 0; i < ansLen; i++){
+            ansFreq[GUESSANSWER[i].charCodeAt() - 97]++;
+        }
+        for(let i = 0; i < 26; i++){
+            commonCharCount += Math.min(guessFreq[i], ansFreq[i]);
+        }
+
+        for(let i = 0; i < ansLen; i++){
+            if(i >= ansLen || i >= guessLen){
+                break;
+            }
+            if(guess[i] === GUESSANSWER[i]){
+                sameLocCount++;
+            }
+        }
+
+        //render info
+        renderLi("guess-results", "Number of Characters in the word: ", commonCharCount);
+        localStorage.setItem("numChar", commonCharCount);
+        renderLi("guess-results", "Number of Characters in the correct location: ", sameLocCount);
+        localStorage.setItem("sameLoc", sameLocCount);
+        if(guessLen < ansLen){
+            renderLi("guess-results", "Too short"); 
+            localStorage.setItem("lenResult", "Too short");
+        }else if(guessLen > ansLen){
+            renderLi("guess-results", "Too long");
+            localStorage.setItem("lenResult", "Too long");
+        }else{
+            renderLi("guess-results", "The guess and the answer are the same length");
+            localStorage.setItem("lenResult", "The guess and the answer are the same length");
+        }
+
         return;
     }
 }
@@ -206,8 +276,9 @@ function clearHandler(){
     winStreak = 0;
     avgGuesses = 0;
     GAMEINPROGRESS = false;
+    numGuesses = 0
     initPage();
-    newGameHandler();
+    getRandomWord(newGameHandler);
     return;
 }
 
