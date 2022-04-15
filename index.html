@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Evil Wordle</title>
+<script src = "wordlewords.js"></script>
+</head>
+<body onload="initPage()">
+
+    <!-- The number of games played
+    The number of games won
+    The length of the current win streak (how many games they have won in a row)
+    Average number of guesses per game -->
+
+<h1>Evil Wordle</h1>
+<br>
+<button type="button" onclick="getRandomWord(newGameHandler)">New Game</button>
+<button type="button" style="float: right" onclick="clearHandler()">Clear Stats</button>
+<br>
+<p id="games-played">Number of games played </p>
+<p id="games-won">Number of games won </p>
+<p id="win-streak">Win Streak </p>
+<p id="avg-guesses">Average Number of Guesses per game </p>
+<p id="num-guesses">Current number of guesses </p>
+<br>
+<p><b>Previous guesses:</b><p>
+<ul id="guess-list"></ul>
+<br>
+<label for="guess-input">Guess:</label>
+<br>
+<input type="text" id="guess-input" name="guess-input" disabled><br><br>
+<button id="guess-submit" disabled onclick="guessHandler()">Submit Guess</button>
+
+</body>
+</html> 
